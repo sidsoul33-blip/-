@@ -11,7 +11,7 @@ CHAT_ID = st.secrets["CHAT_ID"]
 FRED_API_KEY = st.secrets["FRED_API_KEY"]
 
 THRESHOLDS = {
-    "us10y": 4.7,
+    "us10y": 4.5,
     "hy_spread": 6.0,
     "dxy": 110,
     "usdkrw": 1450,
