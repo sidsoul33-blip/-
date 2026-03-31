@@ -105,8 +105,43 @@ def action_signal(risk, vix, trend):
 st.set_page_config(layout="wide", page_title="Market Guardian")
 st.title("📊 시장 지표 및 위험 감지 시스템")
 
-# 데이터 로드
 try:
     data = get_data()
     risk, details, trend = analyze(data)
-    signal = action_signal(risk, data["
+    # --- 문제의 112라인 에러 수정 지점 ---
+    signal = action_signal(risk, data["vix"], trend)
+
+    # 핵심 지표 (가장 중요하게 보시는 2가지)
+    st.subheader("🔥 핵심 지표: 변동 속도")
+    m1, m2 = st.columns(2)
+    with m1:
+        st.metric(label="🇺🇸 미국채 10년물 금리", value=f"{data['us10y']:.2f}%", 
+                  delta=f"{data['us10y_diff']:+.3f}", delta_color="inverse")
+    with m2:
+        st.metric(label="📉 하이일드 스프레드", value=f"{data['hy_spread']:.2f}%", 
+                  delta=f"{data['hy_diff']:+.3f}", delta_color="inverse")
+
+    st.divider()
+
+    # 알림 및 발송 버튼
+    c1, c2 = st.columns([3, 1])
+    with c1:
+        if risk >= 4: st.error(f"🚨 현재 위험 신호 {risk}개 발생!")
+        else: st.success(f"✅ 현재 위험 신호 {risk}개 (안정적)")
+        st.info(f"🎯 가이드: {signal}")
+    with c2:
+        if st.button("🚀 텔레그램 발송", use_container_width=True):
+            msg = (f"🚨 [시장 알림]\n- 위험도: {risk}개\n- 가이드: {signal}\n"
+                   f"- 10Y: {data['us10y']:.2f}% ({data['us10y_diff']:+.3f})\n"
+                   f"- HY: {data['hy_spread']:.2f}% ({data['hy_diff']:+.3f})")
+            send_telegram_msg(msg)
+
+    # 기타 지표
+    st.divider()
+    cols = st.columns(4)
+    other = {"dxy": "달러 인덱스", "usdkrw": "환율", "vix": "VIX", "oil": "유가"}
+    for i, (k, v) in enumerate(other.items()):
+        cols[i % 4].metric(label=v, value=f"{data[k]:.2f}", delta=details[k], delta_color="inverse")
+
+except Exception as e:
+    st.error(f"실행 중 오류가 발생했습니다: {e}")
