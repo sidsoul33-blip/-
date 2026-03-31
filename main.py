@@ -56,7 +56,56 @@ def get_data():
         "usdkrw": usdkrw, "jpykrw": jpykrw, "vix": vix,
         "oil": oil, "sp_now": sp_now, "sp_ma200": sp_ma200
     }
+# =========================
+# 🎨 UI (색상 및 카드 스타일 적용)
+# =========================
+st.set_page_config(layout="wide")
+st.title("📊 시장 자동 판단 시스템")
 
+data = get_data()
+risk, details, trend = analyze(data)
+
+# 상단 상태 알림창 (위험도에 따라 색상 변경)
+if risk >= 4:
+    st.error(f"🚨 현재 위험 신호: {risk}개 (매우 위험)")
+elif risk >= 2:
+    st.warning(f"⚠️ 현재 위험 신호: {risk}개 (주의)")
+else:
+    st.success(f"✅ 현재 위험 신호: {risk}개 (안정)")
+
+# 행동 가이드
+signal = action_signal(risk, data["vix"], trend)
+st.info(f"🎯 행동 가이드: {signal}")
+
+# 핵심 지표 표시 (색상 메트릭 적용)
+cols = st.columns(4)
+labels = {
+    "us10y": "미국채 10Y",
+    "hy_spread": "하이일드 스프레드",
+    "dxy": "달러 인덱스",
+    "usdkrw": "원/달러 환율",
+    "jpykrw": "엔/원 환율",
+    "vix": "VIX 지수",
+    "oil": "국제 유가"
+}
+
+for i, key in enumerate(labels):
+    col = cols[i % 4]
+    is_risk = details[key] == "위험"
+    
+    # 지표값이 기준치보다 높으면 빨간색(inverse), 낮으면 초록색(normal)으로 표시
+    col.metric(
+        label=labels[key], 
+        value=f"{data[key]:.2f}", 
+        delta=details[key], 
+        delta_color="inverse" if is_risk else "normal"
+    )
+
+# S&P500 추세 섹션
+st.divider()
+sp_color = "red" if trend == "하락추세" else "green"
+st.markdown(f"### S&P500 추세: :{sp_color}[{trend}]")
+st.write(f"현재가: {data['sp_now']:.2f} / 200일선: {data['sp_ma200']:.2f}")
 # =========================
 # 🚨 위험 및 행동 판단
 # =========================
@@ -84,30 +133,6 @@ def action_signal(risk, vix, trend):
         elif trend == "하락추세": return "🔴 하락 진행 → 추가 하락 대기"
         else: return "🔴 방어 유지 (현금/금)"
 
-# =========================
-# 🎨 UI 레이아웃
-# =========================
-st.set_page_config(layout="wide", page_title="시장 알람 대시보드")
-st.title("📊 시장 자동 판단 시스템")
-
-data = get_data()
-risk, details, trend = analyze(data)
-signal = action_signal(risk, data["vix"], trend)
-
-st.header(f"🚨 현재 위험 신호: {risk}개")
-st.subheader(f"🎯 행동 가이드: {signal}")
-
-# 지표 시각화
-cols = st.columns(4)
-labels = {"us10y": "10Y", "hy_spread": "HY", "dxy": "DXY", "usdkrw": "USD/KRW", 
-          "jpykrw": "JPY/KRW", "vix": "VIX", "oil": "OIL"}
-
-for i, key in enumerate(labels):
-    with cols[i % 4]:
-        st.metric(labels[key], f"{data[key]:.2f}", details[key], delta_color="inverse")
-
-st.write(f"---")
-st.write(f"📈 S&P500 현재가: {data['sp_now']:.2f} / 200일선: {data['sp_ma200']:.2f} ({trend})")
 
 # =========================
 # 📢 텔레그램 알림 실행
