@@ -6,8 +6,9 @@ import requests  # 서버 통신을 위해 최상단으로 이동
 # =========================
 # 🔑 설정 
 # =========================
-TELEGRAM_TOKEN =
-CHAT_ID = 
+TELEGRAM_TOKEN = st.secrets["TELEGRAM_TOKEN"]
+CHAT_ID = st.secrets["CHAT_ID"]
+FRED_API_KEY = st.secrets["FRED_API_KEY"]
 
 THRESHOLDS = {
     "us10y": 4.7,
