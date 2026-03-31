@@ -14,10 +14,10 @@ THRESHOLDS = {
     "us10y": 4.7,
     "hy_spread": 6.0,
     "dxy": 110,
-    "usdkrw": 1400,
+    "usdkrw": 1500,
     "jpykrw": 1000,
-    "vix": 20,
-    "oil": 90
+    "vix": 30,
+    "oil": 120
 }
 
 fred = Fred(api_key=FRED_API_KEY)
@@ -47,7 +47,7 @@ def get_data():
     jpykrw = (1 / jpyusd) * usdkrw
     vix = yf.Ticker("^VIX").history(period="1d")['Close'].iloc[-1]
     oil = yf.Ticker("CL=F").history(period="1d")['Close'].iloc[-1]
-    sp500 = yf.Ticker("^GSPC").history(period="6mo")
+    sp500 = yf.Ticker("^GSPC").history(period="1y")
     sp_now = sp500['Close'].iloc[-1]
     sp_ma200 = sp500['Close'].rolling(200).mean().iloc[-1]
 
