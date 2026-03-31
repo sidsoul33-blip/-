@@ -57,6 +57,32 @@ def get_data():
         "oil": oil, "sp_now": sp_now, "sp_ma200": sp_ma200
     }
 # =========================
+# 🚨 위험 및 행동 판단
+# =========================
+def analyze(data):
+    risk = 0
+    details = {}
+    for key in THRESHOLDS:
+        if data[key] > THRESHOLDS[key]:
+            risk += 1
+            details[key] = "위험"
+        else:
+            details[key] = "정상"
+    
+    trend = "하락추세" if data["sp_now"] < data["sp_ma200"] else "상승추세"
+    if trend == "하락추세": risk += 1
+    
+    return risk, details, trend
+
+def action_signal(risk, vix, trend):
+    if risk <= 2: return "🟢 매수 유지 / 분할 매수 진행"
+    elif risk <= 4:
+        return "🟡 관망 + 일부 비중 축소" if vix < 25 else "🟡 현금 비중 확대 준비"
+    else:
+        if vix > 30: return "🔴 공포 구간 → 분할 매수 시작 (1차)"
+        elif trend == "하락추세": return "🔴 하락 진행 → 추가 하락 대기"
+        else: return "🔴 방어 유지 (현금/금)"
+# =========================
 # 🎨 UI (색상 및 카드 스타일 적용)
 # =========================
 st.set_page_config(layout="wide")
@@ -100,39 +126,11 @@ for i, key in enumerate(labels):
         delta=details[key], 
         delta_color="inverse" if is_risk else "normal"
     )
-
 # S&P500 추세 섹션
 st.divider()
 sp_color = "red" if trend == "하락추세" else "green"
 st.markdown(f"### S&P500 추세: :{sp_color}[{trend}]")
 st.write(f"현재가: {data['sp_now']:.2f} / 200일선: {data['sp_ma200']:.2f}")
-# =========================
-# 🚨 위험 및 행동 판단
-# =========================
-def analyze(data):
-    risk = 0
-    details = {}
-    for key in THRESHOLDS:
-        if data[key] > THRESHOLDS[key]:
-            risk += 1
-            details[key] = "위험"
-        else:
-            details[key] = "정상"
-    
-    trend = "하락추세" if data["sp_now"] < data["sp_ma200"] else "상승추세"
-    if trend == "하락추세": risk += 1
-    
-    return risk, details, trend
-
-def action_signal(risk, vix, trend):
-    if risk <= 2: return "🟢 매수 유지 / 분할 매수 진행"
-    elif risk <= 4:
-        return "🟡 관망 + 일부 비중 축소" if vix < 25 else "🟡 현금 비중 확대 준비"
-    else:
-        if vix > 30: return "🔴 공포 구간 → 분할 매수 시작 (1차)"
-        elif trend == "하락추세": return "🔴 하락 진행 → 추가 하락 대기"
-        else: return "🔴 방어 유지 (현금/금)"
-
 
 # =========================
 # 📢 텔레그램 알림 실행
