@@ -19,7 +19,7 @@ THRESHOLDS = {
     "usdkrw": 1450,
     "jpykrw": 1000,
     "vix": 24,
-    "oil": 100
+    "oil": 100,
     "sp_now": "S&P500 현재가" 
 }
 
