@@ -14,10 +14,10 @@ THRESHOLDS = {
     "us10y": 4.7,
     "hy_spread": 6.0,
     "dxy": 110,
-    "usdkrw": 1500,
+    "usdkrw": 1450,
     "jpykrw": 1000,
-    "vix": 30,
-    "oil": 120
+    "vix": 24,
+    "oil": 100
 }
 
 fred = Fred(api_key=FRED_API_KEY)
