@@ -94,6 +94,65 @@ def action_signal(risk, vix, trend):
     else: return "🔴 현금 확보 및 방어 포지션"
 
 # =========================
+# 🧠 3. 시장 상태 + 자산 + 비중
+# =========================
+
+def market_regime(data, trend):
+    if data["hy_spread"] > 6 and data["vix"] > 30:
+        return "금융위기"
+    elif data["oil"] > 90 and data["us10y"] > 4.5 and trend == "하락추세":
+        return "스태그플레이션"
+    elif data["us10y"] > 4.5 and data["oil"] > 80:
+        return "인플레이션"
+    else:
+        return "정상"
+
+def asset_action(regime):
+    if regime == "정상":
+        return "S&P500 / 성장주 매수 유지"
+    
+    elif regime == "인플레이션":
+        return "GEV / 에너지 / 원자재 확대"
+    
+    elif regime == "스태그플레이션":
+        return "금(NEM) / 농산물 / 현금 확대"
+    
+    elif regime == "금융위기":
+        return "현금 확보 → 이후 S&P500 분할매수"
+
+def portfolio_weight(regime):
+    if regime == "정상":
+        return {
+            "S&P500": "50%",
+            "GEV": "20%",
+            "금(NEM)": "10%",
+            "방산": "10%",
+            "현금": "10%"
+        }
+    elif regime == "인플레이션":
+        return {
+            "S&P500": "20%",
+            "GEV": "30%",
+            "금(NEM)": "20%",
+            "방산": "15%",
+            "현금": "15%"
+        }
+    elif regime == "스태그플레이션":
+        return {
+            "S&P500": "10%",
+            "GEV": "20%",
+            "금(NEM)": "30%",
+            "농산물": "20%",
+            "현금": "20%"
+        }
+    elif regime == "금융위기":
+        return {
+            "S&P500": "0~20% (대기 후 분할)",
+            "GEV": "10%",
+            "금(NEM)": "30%",
+            "현금": "40~60%"
+        }
+# =========================
 # 🎨 3. 화면 구성 (UI)
 # =========================
 st.set_page_config(layout="wide", page_title="Market Guardian")
@@ -103,7 +162,9 @@ try:
     data = get_data()
     risk, details, trend = analyze(data)
     signal = action_signal(risk, data["vix"], trend)
-
+    regime = market_regime(data, trend)
+    asset_guide = asset_action(regime)
+    weights = portfolio_weight(regime)
     # --- [섹션 1] 가장 신뢰하는 핵심 지표 (3개 배치) ---
     st.subheader("🔥 핵심 모니터링: 변동 속도")
     m1, m2, m3 = st.columns(3)
@@ -127,6 +188,12 @@ try:
         status_color = "red" if trend == "하락추세" else "green"
         st.markdown(f"### 현재 추세: :{status_color}[{trend}] (200일선 대비)")
         st.info(f"🎯 **행동 가이드:** {signal} (위험 신호 {risk}개)")
+        st.warning(f"📌 시장 상태: {regime}")
+        st.success(f"💰 추천 행동: {asset_guide}")
+
+        st.markdown("### 📊 권장 포트폴리오 비중")
+        for k, v in weights.items():
+            st.write(f"- {k}: {v}")
     with c2:
         st.write("") # 간격 맞춤용
         if st.button("🚀 텔레그램 발송", use_container_width=True):
